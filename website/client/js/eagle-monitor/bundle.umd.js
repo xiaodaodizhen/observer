@@ -6,59 +6,54 @@
 
   // --------------------------------------------静态资源性能功能-----------------------------------
 
-  var xhr = {
-    init: (cb) => {
-     
-      let xhr = window.XMLHttpRequest;
-      console.log(xhr);
-      if (xhr._eagle_monitor_flag === true) {
-        return void 0;
+  //---------------------------------------------------------------------------------api接口请求功能性能
+
+  // 备注：所有的电脑都会支持xhr ，不是所有的电脑都支持fetch(所以得进行判断是否支持 window.fetch)
+
+  //------------------------------------------------用户行为监控
+  // 获取本元素是兄弟元素中的第几个，返回 如：li[2]
+  let getIndex = (ele) => {
+    // 获取同级兄弟元素（包含自己）
+    let children = [].slice.call(ele.parentNode.children);
+
+    let myindex = null;
+    // 过滤兄弟元素数组，过滤出跟自己标签名一致的兄弟元素
+    children = children.filter(node => node.tagName == ele.tagName);
+    // 获取ele元素的在兄弟元素中的index
+    for (var i = 0; i < children.length; i++) {
+      if (ele == children[i]) {
+        myindex = i;
       }
-      xhr._eagle_monitor_flag = true;
+    }
+    // for 的i是从0开始的，所以得加1
+    myindex = `[${myindex + 1}]`;
 
-      //更改xhr 原型上的open方法：
-      let _originOpen = xhr.prototype.open;
-      xhr.prototype.open = function (method, url, async, user, password) {
-        this._eagle_xhr_info = { method, url, status: null };
-        return _originOpen = apply(this, arguments);
-      };
+    // 获取大写标签名
+    let tagName = ele.tagName.toLocaleLowerCase();
 
-      // 更改xhr 原型上的send方法
-      let _originSend = xhr.prototype.send;
-      xhr.prototype.send = function (value) {
-        debugger;
-        this._eagle_start_time = Date.now();// 记录方法开始执行时间
+    let myLabel = tagName + myindex;
+    return myLabel;
+  };
+  // 获取标签如  ul[2]/li[1]
+  let getXpath = (ele) => {
+    let xpath = "";
+    let currentEle = ele;
+    while (currentEle != document.body) {
+      let lastPath = xpath ? `/${xpath}` : "";
+      xpath = getIndex(currentEle) + lastPath;
+      currentEle = currentEle.parentNode;
 
-        // 定义上报方法:定义高阶函数（函数返回函数）
-        let ajaxEnd = (eventType) => () => {
-    
-          if (_self.response) {
-            let responseSize = null;// 定义返回res的长度
-            switch (_self.responseType) {// 根据res 的返回类型，获取responseSize
-              case "json":// TODO :JSON 有兼容性问题 && stringify报错问题
-                responseSize = JSON.stringify(_self.response).length;
-                break;
-              case "arraybuffer":// byteLength 是获取buffer长度的属性
-                responseSize = _self.response.byteLength;
-                break;
-            }
-            _self._eagle_xhr_info.event = eventType;
-            _self._eagle_xhr_info.status = _self.status;
-            _self._eagle_xhr_info.success = _self.status === 200;
-            _self._eagle_xhr_info.duration = Date.now() - this._eagle_start_time;
-            _self._eagle_xhr_info.responseSize = responseSize;
-            _self._eagle_xhr_info.type = "xhr";
-            _self._eagle_xhr_info.requestSize = value ? value.length : 0;// TODO：一定确保value 有length属性，（数字，布尔，null ,undefinde 没有此属性，进行兼容判断）
-            cb(_self._eagle_xhr_info);
-          }
-        };
+    }
+    return xpath;
+  };
 
-        // 以下三种状态都代表着请求已经结束了，需要统计一些信息并上报
-        this.addEventListener("load", ajaxEnd("load"), false);// 加载完成
-        this.addEventListener("error", ajaxEnd("error"), false);// 失败
-        this.addEventListener("abort", ajaxEnd("abort"), false);//主动取消停止
-        return _originSend = apply(this, arguments);
-      };
+  var beh = {
+    init: (cb) => {
+      document.addEventListener("click", e => {
+        let target = e.target;
+        let xpath = getXpath(target);
+        cb(xpath);
+      });
     }
   };
 
@@ -71,8 +66,18 @@
   //   console.log(obj);
   // });
 
-  xhr.init((obj) => {
+  // xhr.init((obj) => {
+  //   console.log(obj);
+  // });
+
+  // errorCatch.init((obj) => {
+  //   console.log(obj);
+  // });
+
+  beh.init(obj => {
     console.log(obj);
+    // 实现错误上报功能
+    new Image("http://ddddddd.gif?type=error&data=`${obj}`");
   });
 
 })));

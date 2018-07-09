@@ -12,12 +12,12 @@
 - 技术监控
  - 页面性能监控        —— eagle-sdk/perf.js
  - 静态资源性能监控    —— eagle-sdk/resource.js
- - 错误监控
+ - 错误监控            —— eagle-sdk/errorCatch.js    - middleware/sourceMap.js 错误反解
  - 接口性能监控        —— eagle-sdk/xhr.js
 
 
 - 行为监控
-  - 用户行为监控
+  - 用户行为监控     —— eagle-sdk/beh.js
   - 打点监控
   - 大量log上报策略
   - 时效策略
